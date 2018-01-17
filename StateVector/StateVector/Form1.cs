@@ -32,16 +32,17 @@ namespace StateVector
         private void Form1_Load(object sender, EventArgs e)
         {
             VE[] list = {
-                new VE("init",              VE.TailOr("a", "b", "c"),   InitState, () => { SetLog("!"); }),
-                new VE("a",                 "b",                        () => { SetLog("a->b"); }),
-                new VE("b",                 "a",                        () => { SetLog("b->a"); }),
-                new VE("a",                 "a",                        () => { SetLog("a->a"); }),
-                new VE("b",                 "b",                        () => { SetLog("b->b"); }),
-                new VE(VE.HeadOr("a", "b"), "c",                        () => { SetLog("a|b->c"); }),
-                new VE("c",                 VE.TailOr("a", "b"),        () => { SetLog("c->a|b"); })
+                new VE("init",  "[a-c]",    InitState, () => { SetLog("!"); }),
+                new VE("a",     "b",        () => { SetLog("a->b"); }),
+                new VE("b",     "a",        () => { SetLog("b->a"); }),
+                new VE("a",     "a",        () => { SetLog("a->a"); }),
+                new VE("b",     "b",        () => { SetLog("b->b"); }),
+                new VE("a|b",   "c",        () => { SetLog("a|b->c"); }),
+                new VE("c",     "a|b",      () => { SetLog("c->a|b"); })
             };
 
             m_stateVector = new StateVector("init", list);
+            m_stateVector.EnableRegexp = true;//状態判定に正規表現を使用する
         }
 
         private void button1_Click(object sender, EventArgs e)
