@@ -20,6 +20,7 @@ namespace StateVector
         protected string m_tail = "";
         protected string m_tag = "";
         protected VEFD m_func;
+        protected int m_listPriority = -1;
         protected int m_listIndex = -1;
 
         public string Head
@@ -74,7 +75,20 @@ namespace StateVector
             }
         }
 
-        public int ListIndex
+        public int Priority
+        {
+            get
+            {
+                return m_listPriority;
+            }
+
+            set
+            {
+                m_listPriority = value;
+            }
+        }
+
+        public int Index
         {
             get
             {
@@ -367,13 +381,41 @@ namespace StateVector
 
         protected void Init(string startState, VectorEvent[] eventArray)
         {
+            int index = 0;
+            int prioroty = 0;
             StateNow = startState;
             m_eventList.Clear();
 
             foreach (VectorEvent ve in eventArray)
             {
-                m_eventList.AddRange(ve.Array);
+                foreach (VectorEventBase ins in ve.Array)
+                {
+                    ins.Index = index;
+                    ins.Priority = prioroty;
+                    m_eventList.Add(ins);
+                    prioroty++;
+                }
+                index++;
             }
+        }
+
+        public void GetListInfo()
+        {
+            foreach(VectorEventBase ins in m_eventList)
+            {
+                Debug.Write(m_listName + ":");
+                Debug.WriteLine(GetEventSetting(ins));
+            }
+        }
+
+        protected string GetEventSetting(VectorEventBase ins)
+        {
+            string ret = "";
+
+            ret = ins.Tag + " list[" + ins.Index +"].priority("+ ins.Priority + ") "
+                + ins.Head + " -> " + ins.Tail + " , " + ins.Func.Method.Name;
+
+            return ret;
         }
 
         public void Refresh(string stateNext)
@@ -393,9 +435,9 @@ namespace StateVector
             {
                 if (EnableRefreshTrace)
                 {
-                    Debug.Write(m_listName + " ");
+                    Debug.Write(m_listName + " " + ins.Tag + " ");
                     Debug.Write(m_stateNow + " -> " + stateNext);
-                    Debug.Write(" do["+ ins.ListIndex + "] " + ins.Func.Method.Name);
+                    Debug.Write(" do[" + ins.Index + "].priority(" + ins.Priority + ") " + ins.Func.Method.Name);
                 }
 
                 ins.Func();
