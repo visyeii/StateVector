@@ -13,7 +13,7 @@ StateVector m_stateVector;
 private void Form1_Load(object sender, EventArgs e)
 {
     VE[] list = {
-        //old state (head)          new state(tail)             function
+        //previous state (head)     new state(tail)             function
         new VE("init",              VE.TailOr("a", "b", "c"),   InitState, () => { SetLog("!"); }),
         new VE("a",                 "b",                        () => { SetLog("a->b"); }),
         new VE("b",                 "a",                        () => { SetLog("b->a"); }),
@@ -75,3 +75,180 @@ state Form {
 Form --> [*] : Form Close
 @enduml
 ```
+
+## GUI Display
+![](https://raw.githubusercontent.com/visyeii/StateVector/Readme_Edit/out/SampleState/SampleStateGui.png)
+
+Initial state The definition corresponding to the state change from ```init``` is the next one line.
+
+```csharp
+new VE("init", VE.TailOr("a", "b", "c"), InitState, () => { SetLog("!"); }),
+```
+
+If you write it without omitting it, it will be the next six lines.
+```csharp
+new VE("init", "a", InitState),
+new VE("init", "a", () => { SetLog("!"); }),
+new VE("init", "b", InitState),
+new VE("init", "b", () => { SetLog("!"); }),
+new VE("init", "c", InitState),
+new VE("init", "c", () => { SetLog("!"); }),
+```
+Note:```InitState``` is the same as``` () => {SetLog ("start");} ```.
+
+By summarizing the definition with the ```VE.TailOr``` wrapper like this, the amount of description is reduced.
+DRY!
+
+#### Various wrappers
++ ```VE.HeadOr``` ... Aggregate the definition of the __previous state (head)__. Required for aggregation.
++ ```VE.TailOr``` ... Aggregate the definition of the __new state (tail)__. Required for aggregation.
++ ```VE.Func``` ... Express the function (Lambda formula seems to make misunderstanding) It can be omitted.
++ ```VE.FuncArray``` ... Aggregate function definitions. Even when aggregating it can be omitted.
+
+Initial state ```"init"``` If you carefully rewrite the behavior of state change from without changing the behavior, it becomes the following description.
+
+```csharp
+new VE(
+    VE.HeadOr("init"),
+    VE.TailOr("a", "b", "c"),
+    VE.FuncArray(InitState, () => { SetLog("!"); })
+),
+```
+
+----
+
+## Advanced definition
+Regular expressions can be used for matching judgment.
+```m_stateVector.EnableRegexp = true;``` is required.
+
+Various wrappers can be used as they are.
+
+```csharp
+private void Form1_Load(object sender, EventArgs e)
+{
+    VE[] list = {
+        new VE("init", "[a-c]",   InitState, () => { SetLog("!"); }),
+        new VE("a",    "b",       () => { SetLog("a->b"); }),
+        new VE("b",    "a",       () => { SetLog("b->a"); }),
+        new VE("a",    "a",       () => { SetLog("a->a"); }),
+        new VE("b",    "b",       () => { SetLog("b->b"); }),
+        new VE("a|b",  "c",       () => { SetLog("a|b->c"); }),
+        new VE("c",    "a|b",     () => { SetLog("c->a|b"); })
+    };
+
+    m_stateVector = new StateVector("init", list);
+    m_stateVector.EnableRegexp = true;//<-Required!!
+}
+```
+
+Using regular expressions makes it possible to
+create definitions that __match anything__ in either the
+__previous state (head)__ or the __new state (tail)__.
+
+It is possible to do pattern matching by __adding a prefix or suffix__ to the name of the state.
+You can aggregate a wider range of processing.
+DRY !!
+
+----
+
+## Debug function
+```csharp
+private void Form1_Load(object sender, EventArgs e)
+{
+    VE[] list = {
+        new VE("init",              VE.TailOr("a", "b", "c"),   InitState, () => { SetLog("!"); }),
+        new VE("a",                 "b",                        () => { SetLog("a->b"); }),
+        new VE("b",                 "a",                        () => { SetLog("b->a"); }),
+        new VE("a",                 "a",                        () => { SetLog("a->a"); }),
+        new VE("b",                 "b",                        () => { SetLog("b->b"); }),
+        new VE(VE.HeadOr("a", "b"), "c",                        () => { SetLog("a|b->c"); }),
+                                                           //Match condition can be identified with "tagName"
+        new VE("c",                 VE.TailOr("a", "b"),   "tagName", () => { SetLog("c->a|b"); })
+    };
+
+    m_stateVector = new StateVector("init", list);
+    m_stateVector.GetListInfo();//Debug output of match condition list
+    m_stateVector.EnableRefreshTrace = true;//Match condition Enable debug output of execution log
+}
+```
+
+### Debug output
+
+```:Debug output
+#Match condition list part.　list[INDEX].priority(PRIORITY)...Execute from a small value
+#Various wrapper parts are matched by expanding the combination when executing the constructor.
+:list[0].priority(0) init -> a , InitState
+:list[0].priority(1) init -> a , <Form1_Load>b__3_0
+:list[0].priority(2) init -> b , InitState
+:list[0].priority(3) init -> b , <Form1_Load>b__3_0
+:list[0].priority(4) init -> c , InitState
+:list[0].priority(5) init -> c , <Form1_Load>b__3_0
+:list[1].priority(6) a -> b , <Form1_Load>b__3_1
+:list[2].priority(7) b -> a , <Form1_Load>b__3_2
+:list[3].priority(8) a -> a , <Form1_Load>b__3_3
+:list[4].priority(9) b -> b , <Form1_Load>b__3_4
+:list[5].priority(10) a -> c , <Form1_Load>b__3_5
+:list[5].priority(11) b -> c , <Form1_Load>b__3_5
+
+#Match condition list part.
+#Output tagName for identification
+:tagName list[6].priority(12) c -> a , <Form1_Load>b__3_6
+:tagName list[6].priority(13) c -> b , <Form1_Load>b__3_6
+
+#Execution log
+  init -> a do[0].priority(0) InitState done.
+  init -> a do[0].priority(1) <Form1_Load>b__3_0 done.
+  a -> b do[1].priority(6) <Form1_Load>b__3_1 done.
+  b -> c do[5].priority(11) <Form1_Load>b__3_5 done.
+ tagName c -> b do[6].priority(13) <Form1_Load>b__3_6 done.
+  b -> a do[2].priority(7) <Form1_Load>b__3_2 done.
+```
+
+Note: It can also be used in regular expression judgment ```EnableRegexp = true```, but unlike the various wrappers, the definition is used as it is for judgment
+
+## When using multiple StateVector
+Add ```listName``` to the constructor. (```List_A``` in the following)
+
+```csharp
+m_stateVector = new StateVector("list_A", "init", list);
+```
+Because ```list_A``` is appended to the beginning of the debug output,
+Even if other ```StateVector``` definitions are mixed, identification becomes easier
+
+### Debug output
+```:Debug output
+list_A: list[0].priority(0) init -> a , InitState
+list_A: list[0].priority(1) init -> a , <Form1_Load>b__3_0
+list_A: list[0].priority(2) init -> b , InitState
+list_A: list[0].priority(3) init -> b , <Form1_Load>b__3_0
+list_A: list[0].priority(4) init -> c , InitState
+list_A: list[0].priority(5) init -> c , <Form1_Load>b__3_0
+list_A: list[1].priority(6) a -> b , <Form1_Load>b__3_1
+list_A: list[2].priority(7) b -> a , <Form1_Load>b__3_2
+list_A: list[3].priority(8) a -> a , <Form1_Load>b__3_3
+list_A: list[4].priority(9) b -> b , <Form1_Load>b__3_4
+list_A: list[5].priority(10) a -> c , <Form1_Load>b__3_5
+list_A: list[5].priority(11) b -> c , <Form1_Load>b__3_5
+list_A:tagName list[6].priority(12) c -> a , <Form1_Load>b__3_6
+list_A:tagName list[6].priority(13) c -> b , <Form1_Load>b__3_6
+list_A  init -> a do[0].priority(0) InitState done.
+list_A  init -> a do[0].priority(1) <Form1_Load>b__3_0 done.
+list_A  a -> b do[1].priority(6) <Form1_Load>b__3_1 done.
+list_A  b -> c do[5].priority(11) <Form1_Load>b__3_5 done.
+list_A tagName c -> b do[6].priority(13) <Form1_Load>b__3_6 done.
+list_A  b -> a do[2].priority(7) <Form1_Load>b__3_2 done.
+```
+
+I think that just one or two ```StateVector```s are exactly equivalent to one ```Form```.
+
+## Summary
+### Merit
++ It is possible to reduce conditional branches related to state transitions and to group the definitions.
++ When changing the specification, it becomes easier to change the definition of the state transition, so the bug is reduced.
++ Automatic generation of diagrams using PlantUML etc. from the definition of state transition. (future tasks)
++ Automatic generation of state transition definition from the definition of PlantUML etc. (future tasks)
+
+### Demerit
++ Since resources (memory and CPU) used for state transition processing increase, it is not suitable for frequent processing.
++ Step execution at debugging is hard to follow.
++ Confused if you do not use it after knowing the mechanism.
