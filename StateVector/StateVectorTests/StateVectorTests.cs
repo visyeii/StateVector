@@ -9,14 +9,13 @@ using System.Threading.Tasks;
 namespace StateVector.Tests
 {
     using TW_StateVector = TestWrapper_StateVector;
-    using VEFD = VectorEventFuncDelegate;
     using VEB = VectorEventBase;
     using VE = VectorEvent;
 
     public class TestWrapper_StateVector : StateVector
     {
         public TestWrapper_StateVector()
-            :base()
+            : base()
         {
 
         }
@@ -104,7 +103,7 @@ namespace StateVector.Tests
             // 状態Aから状態Bへの変化条件が登録済みのため動作する
             int lambdaCheck = 0;
 
-            VEFD func = () => { lambdaCheck = 1; };
+            Action func = () => { lambdaCheck = 1; };
 
             VE[] list = {
                 new VE("a", "b", () => { lambdaCheck = 1; }),
@@ -122,7 +121,7 @@ namespace StateVector.Tests
         {
             int lambdaCheck = 0;
 
-            VEFD func = () => { lambdaCheck = 1; };//<Refresh_OK_ab>g__func|0
+            Action func = () => { lambdaCheck = 1; };//<Refresh_OK_ab>g__func|0
 
             VE[] list = {
                 new VE(@".*", @"[bc]", func)
@@ -140,7 +139,7 @@ namespace StateVector.Tests
             int lambdaCheck = 0;
             bool isCatch = false;
 
-            VEFD func = () => { lambdaCheck = 1; };
+            Action func = () => { lambdaCheck = 1; };
             try
             {
                 VE[] list = {
@@ -163,7 +162,7 @@ namespace StateVector.Tests
             int lambdaCheck = 0;
             bool isCatch = false;
 
-            VEFD func = () => { lambdaCheck = 1; };
+            Action func = () => { lambdaCheck = 1; };
             try
             {
                 VE[] list = {
@@ -186,11 +185,11 @@ namespace StateVector.Tests
             int lambdaCheck = 0;
             bool isCatch = false;
 
-            VEFD func = () => { lambdaCheck = 1; };
+            Action func = () => { lambdaCheck = 1; };
             try
             {
                 VE[] list = {
-                    new VE("a", "b", (VEFD)null),
+                    new VE("a", "b", (Action)null),
                 };
                 ins = new TW_StateVector("a", list);
             }
@@ -209,7 +208,7 @@ namespace StateVector.Tests
             // 状態Aから状態Bへの変化条件が登録済みのため動作する
             int lambdaCheck = 0;
 
-            VEFD func = () => { lambdaCheck = 1; };//<Refresh_OK_ab>g__func|0
+            Action func = () => { lambdaCheck = 1; };//<Refresh_OK_ab>g__func|0
 
             VE[] list = {
                 new VE("a", "b",
@@ -230,7 +229,7 @@ namespace StateVector.Tests
             // 状態A or Bから状態Bへの変化条件が登録済みのため動作する
             int lambdaCheck = 0;
 
-            VEFD func = () => { lambdaCheck++; };
+            Action func = () => { lambdaCheck++; };
 
             VE[] list = {
                 new VE(
@@ -252,7 +251,7 @@ namespace StateVector.Tests
             // 状態Aから状態B or Cへの変化条件が登録済みのため動作する
             int lambdaCheck = 0;
 
-            VEFD func = () => { lambdaCheck++; };
+            Action func = () => { lambdaCheck++; };
 
             VE[] list = {
                 new VE(
@@ -291,7 +290,7 @@ namespace StateVector.Tests
                 new VE("a", "b", /* ラムダ式 */() => { lambdaCheck = 1; })
             };
             ins = new TW_StateVector("a", list);
-            
+
             ins.StateNow = ("b");
             ins.Refresh("b");
             Assert.AreEqual(0, lambdaCheck);
@@ -336,7 +335,7 @@ namespace StateVector.Tests
                 new VE("a", "b", /* ラムダ式 */() => { lambdaCheck = 1; })
             };
             ins = new TW_StateVector("a", list);
-            
+
             ins.StateNow = ("c");
             ins.Refresh("b");
             Assert.AreEqual(0, lambdaCheck);
@@ -351,7 +350,7 @@ namespace StateVector.Tests
                 new VE("a", "b", /* ラムダ式 */() => { lambdaCheck = 1; })
             };
             ins = new TW_StateVector("a", list);
-            
+
             ins.StateNow = ("c");
             ins.Refresh("b");
             Assert.AreEqual(0, lambdaCheck);

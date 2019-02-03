@@ -8,134 +8,41 @@ using System.Diagnostics;
 
 namespace StateVector
 {
+    using System.Collections.ObjectModel;
     using System.Text.RegularExpressions;
-    using VEFD = VectorEventFuncDelegate;
-
-    public delegate void VectorEventFuncDelegate();
 
     public class VectorEventBase
     {
-
-        protected string m_head = "";
-        protected string m_tail = "";
-        protected string m_tag = "";
-        protected VEFD m_func;
-        protected int m_listPriority = -1;
-        protected int m_listIndex = -1;
-
-        public string Head
-        {
-            get
-            {
-                return m_head;
-            }
-
-            set
-            {
-                m_head = value;
-            }
-        }
-
-        public string Tail
-        {
-            get
-            {
-                return m_tail;
-            }
-
-            set
-            {
-                m_tail = value;
-            }
-        }
-
-        public string Tag
-        {
-            get
-            {
-                return m_tag;
-            }
-
-            set
-            {
-                m_tag = value;
-            }
-        }
-
-        public VEFD Func
-        {
-            get
-            {
-                return m_func;
-            }
-
-            set
-            {
-                m_func = value;
-            }
-        }
-
-        public int Priority
-        {
-            get
-            {
-                return m_listPriority;
-            }
-
-            set
-            {
-                m_listPriority = value;
-            }
-        }
-
-        public int Index
-        {
-            get
-            {
-                return m_listIndex;
-            }
-
-            set
-            {
-                m_listIndex = value;
-            }
-        }
+        public string Head { get; set; } = string.Empty;
+        public string Tail { get; set; } = string.Empty;
+        public string Tag { get; set; } = string.Empty;
+        public Action Func { get; set; } = null;
+        public int Priority { get; set; } = -1;
+        public int Index { get; set; } = -1;
 
         public VectorEventBase()
         {
 
         }
 
-        public VectorEventBase(string head, string tail, VEFD func)
+        public VectorEventBase(string head, string tail, Action func)
         {
-            Init(head, tail, func);
+            Head = head;
+            Tail = tail;
+            Func = func;
         }
 
-        public VectorEventBase(string head, string tail, string tag, VEFD func)
+        public VectorEventBase(string head, string tail, string tag, Action func)
+            : this(head, tail, func)
         {
             Tag = tag;
-            Init(head, tail, func);
-        }
-
-        protected void Init(string head, string tail, VEFD func)
-        {
-            m_head = head;
-            m_tail = tail;
-            m_func = func;
         }
     }
 
     public class VectorState
     {
         protected List<string> m_list = new List<string>();
-
-        public string[] Array
-        {
-            get
-            {
-                return m_list.ToArray();
-            }
-        }
+        public ReadOnlyCollection<string> Collection => new ReadOnlyCollection<string>(m_list);
 
         public VectorState(params string[] stateList)
         {
@@ -163,60 +70,51 @@ namespace StateVector
 
     public class VectorEvent
     {
-
-        protected List<VectorEventBase> m_vectorEventList = new List<VectorEventBase>();
-
-        public VectorEventBase[] Array
-        {
-            get
-            {
-                return m_vectorEventList.ToArray();
-            }
-        }
+        public List<VectorEventBase> Array { get; protected set; } = new List<VectorEventBase>();
 
         public VectorEvent()
         {
 
         }
 
-        public VectorEvent(string head, string tail, params VEFD[] funcArray)
+        public VectorEvent(string head, string tail, params Action[] funcArray)
         {
-            Init(head, tail, "", funcArray);
+            Init(head, tail, string.Empty, funcArray);
         }
 
-        public VectorEvent(VectorHead head, string tail, params VEFD[] funcArray)
+        public VectorEvent(VectorHead head, string tail, params Action[] funcArray)
         {
-            Init(head.Array, tail, "", funcArray);
+            Init(head.Collection, tail, string.Empty, funcArray);
         }
 
-        public VectorEvent(string head, VectorTail tail, params VEFD[] funcArray)
+        public VectorEvent(string head, VectorTail tail, params Action[] funcArray)
         {
-            Init(head, tail.Array, "", funcArray);
+            Init(head, tail.Collection, string.Empty, funcArray);
         }
 
-        public VectorEvent(VectorHead head, VectorTail tail, params VEFD[] funcArray)
+        public VectorEvent(VectorHead head, VectorTail tail, params Action[] funcArray)
         {
-            Init(head.Array, tail.Array, "", funcArray);
+            Init(head.Collection, tail.Collection, string.Empty, funcArray);
         }
 
-        public VectorEvent(string head, string tail, string tag, params VEFD[] funcArray)
+        public VectorEvent(string head, string tail, string tag, params Action[] funcArray)
         {
             Init(head, tail, tag, funcArray);
         }
 
-        public VectorEvent(VectorHead head, string tail, string tag, params VEFD[] funcArray)
+        public VectorEvent(VectorHead head, string tail, string tag, params Action[] funcArray)
         {
-            Init(head.Array, tail, tag, funcArray);
+            Init(head.Collection, tail, tag, funcArray);
         }
 
-        public VectorEvent(string head, VectorTail tail, string tag, params VEFD[] funcArray)
+        public VectorEvent(string head, VectorTail tail, string tag, params Action[] funcArray)
         {
-            Init(head, tail.Array, tag, funcArray);
+            Init(head, tail.Collection, tag, funcArray);
         }
 
-        public VectorEvent(VectorHead head, VectorTail tail, string tag, params VEFD[] funcArray)
+        public VectorEvent(VectorHead head, VectorTail tail, string tag, params Action[] funcArray)
         {
-            Init(head.Array, tail.Array, tag, funcArray);
+            Init(head.Collection, tail.Collection, tag, funcArray);
         }
 
         public static VectorHead HeadOr(params string[] head)
@@ -229,34 +127,34 @@ namespace StateVector
             return new VectorTail(tail);
         }
 
-        public static VEFD Func(VEFD func)
+        public static Action Func(Action func)
         {
             return func;
         }
 
-        public static VEFD[] FuncArray(params VEFD[] funcArray)
+        public static Action[] FuncArray(params Action[] funcArray)
         {
             return funcArray;
         }
 
-        protected void Init(string[] headArray, string[] tailArray, string tag, params VEFD[] funcArray)
+        protected void Init(IList<string> headCollection, IList<string> tailCollection, string tag, params Action[] funcArray)
         {
-            foreach (string head in headArray)
+            foreach (var head in headCollection)
             {
-                if (head == "")
+                if (string.IsNullOrEmpty(head))
                 {
                     throw new ArgumentException("head array contains \"\"");
                 }
 
-                Init(head, tailArray, tag, funcArray);
+                Init(head, tailCollection, tag, funcArray);
             }
         }
 
-        protected void Init(string[] headArray, string tail, string tag, params VEFD[] funcArray)
+        protected void Init(IList<string> headCollection, string tail, string tag, params Action[] funcArray)
         {
-            foreach (string head in headArray)
+            foreach (var head in headCollection)
             {
-                if (head == "")
+                if (string.IsNullOrEmpty(head))
                 {
                     throw new ArgumentException("head array contains \"\"");
                 }
@@ -265,11 +163,11 @@ namespace StateVector
             }
         }
 
-        protected void Init(string head, string[] tailArray, string tag, params VEFD[] funcArray)
+        protected void Init(string head, IList<string> tailCollection, string tag, params Action[] funcArray)
         {
-            foreach (string tail in tailArray)
+            foreach (var tail in tailCollection)
             {
-                if (tail == "")
+                if (string.IsNullOrEmpty(tail))
                 {
                     throw new ArgumentException("tail array contains \"\"");
                 }
@@ -278,33 +176,22 @@ namespace StateVector
             }
         }
 
-        protected void Init(string head, string tail, string tag, params VEFD[] funcArray)
+        protected void Init(string head, string tail, string tag, params Action[] funcArray)
         {
-            foreach(VEFD func in funcArray)
+            foreach (var func in funcArray)
             {
                 if (IsNullArgument(head, tail, tag, func))
                 {
                     throw new ArgumentNullException();
                 }
 
-                m_vectorEventList.Add(new VectorEventBase(head, tail, tag, func));
+                Array.Add(new VectorEventBase(head, tail, tag, func));
             }
         }
 
         protected bool IsNullArgument(params object[] objArray)
         {
-            bool ret = false;
-
-            foreach(object obj in objArray)
-            {
-                if (obj == null)
-                {
-                    ret = true;
-                    break;
-                }
-            }
-
-            return ret;
+            return objArray.Contains(null);
         }
     }
 
@@ -322,61 +209,28 @@ namespace StateVector
     /// </summary>
     public class StateVector
     {
-        public bool EnableRefreshTrace = false;
-        public bool EnableRegexp = false;
-        protected string m_stateNow;
-        protected string m_stateOld;
-        protected string m_listName;
-        protected List<VectorEventBase> m_eventList = new List<VectorEventBase>();
-        
-        public string StateNow
-        {
-            get
-            {
-                return m_stateNow;
-            }
+        public bool EnableRefreshTrace { get; set; } = false;
+        public bool EnableRegexp { get; set; } = false;
+        protected List<VectorEventBase> EventList { get; set; }  = new List<VectorEventBase>();
 
-            set
-            {
-                m_stateNow = value;
-            }
-        }
-
-        public string StateOld
-        {
-            get
-            {
-                return m_stateOld;
-            }
-        }
-
-        public string ListName
-        {
-            get
-            {
-                return m_listName;
-            }
-
-            set
-            {
-                m_listName = value;
-            }
-        }
+        public string StateNow { get; set; } = string.Empty;
+        public string StateOld { get; protected set; } = string.Empty;
+        public string ListName { get; set; } = string.Empty;
 
         public StateVector()
         {
 
         }
-        
-        public StateVector(string startState, VectorEvent[] eventArray)
+
+        public StateVector(string startState, params VectorEvent[] eventArray)
         {
             Init(startState, eventArray);
         }
 
-        public StateVector(string listName, string startState, VectorEvent[] eventArray)
+        public StateVector(string listName, string startState, params VectorEvent[] eventArray)
+            : this(startState, eventArray)
         {
-            m_listName = listName;
-            Init(startState, eventArray);
+            ListName = listName;
         }
 
         protected void Init(string startState, VectorEvent[] eventArray)
@@ -384,15 +238,15 @@ namespace StateVector
             int index = 0;
             int prioroty = 0;
             StateNow = startState;
-            m_eventList.Clear();
+            EventList.Clear();
 
-            foreach (VectorEvent ve in eventArray)
+            foreach (var ve in eventArray)
             {
-                foreach (VectorEventBase ins in ve.Array)
+                foreach (var veb in ve.Array)
                 {
-                    ins.Index = index;
-                    ins.Priority = prioroty;
-                    m_eventList.Add(ins);
+                    veb.Index = index;
+                    veb.Priority = prioroty;
+                    EventList.Add(veb);
                     prioroty++;
                 }
                 index++;
@@ -401,19 +255,18 @@ namespace StateVector
 
         public void GetListInfo()
         {
-            foreach(VectorEventBase ins in m_eventList)
+            foreach (var ins in EventList)
             {
-                Debug.Write(m_listName + ":");
+                Debug.Write(ListName + ":");
                 Debug.WriteLine(GetEventSetting(ins));
             }
         }
 
         protected string GetEventSetting(VectorEventBase ins)
         {
-            string ret = "";
+            string ret = string.Empty;
 
-            ret = ins.Tag + " list[" + ins.Index +"].priority("+ ins.Priority + ") "
-                + ins.Head + " -> " + ins.Tail + " , " + ins.Func.Method.Name;
+            ret = $"{ ins.Tag } list[{ ins.Index }].priority({ ins.Priority }) {ins.Head} -> {ins.Tail} , {ins.Func.Method.Name}";
 
             return ret;
         }
@@ -424,23 +277,23 @@ namespace StateVector
 
             if (EnableRegexp)
             {
-                list = GetRegexp(m_stateNow, stateNext);
+                list = GetRegexp(StateNow, stateNext);
             }
             else
             {
-                list = GetHeadAndTali(m_stateNow, stateNext);
+                list = GetHeadAndTali(StateNow, stateNext);
             }
 
-            foreach (VectorEventBase ins in list)
+            foreach (var vbe in list)
             {
                 if (EnableRefreshTrace)
                 {
-                    Debug.Write(m_listName + " " + ins.Tag + " ");
-                    Debug.Write(m_stateNow + " -> " + stateNext);
-                    Debug.Write(" do[" + ins.Index + "].priority(" + ins.Priority + ") " + ins.Func.Method.Name);
+                    Debug.Write(ListName + " " + vbe.Tag + " ");
+                    Debug.Write(StateNow + " -> " + stateNext);
+                    Debug.Write(" do[" + vbe.Index + "].priority(" + vbe.Priority + ") " + vbe.Func.Method.Name);
                 }
 
-                ins.Func();
+                vbe.Func();
 
                 if (EnableRefreshTrace)
                 {
@@ -448,42 +301,25 @@ namespace StateVector
                 }
             }
 
-            m_stateOld = m_stateNow;
-            m_stateNow = stateNext;
+            StateOld = StateNow;
+            StateNow = stateNext;
         }
 
-        protected　List<VectorEventBase> GetHeadAndTali(string stateNow, string stateNext)
+        protected List<VectorEventBase> GetHeadAndTali(string stateNow, string stateNext)
         {
-            List<VectorEventBase> ret = new List<VectorEventBase>();
-
-            foreach (VectorEventBase ins in m_eventList)
-            {
-                if (stateNow == ins.Head)
-                {
-                    if (stateNext == ins.Tail)
-                    {
-                        ret.Add(ins);
-                    }
-                }
-            }
+            List<VectorEventBase> ret = EventList
+                .Where(veBase => (veBase.Head == stateNow && veBase.Tail == stateNext))
+                .ToList();
 
             return ret;
         }
 
         protected List<VectorEventBase> GetRegexp(string stateNow, string stateNext)
         {
-            List<VectorEventBase> ret = new List<VectorEventBase>();
-
-            foreach (VectorEventBase ins in m_eventList)
-            {
-                if (Regex.IsMatch(stateNow, ins.Head))
-                {
-                    if (Regex.IsMatch(stateNext, ins.Tail))
-                    {
-                        ret.Add(ins);
-                    }
-                }
-            }
+            List<VectorEventBase> ret = EventList
+                .Where(veBase => (
+                    Regex.IsMatch(stateNow, veBase.Head) && Regex.IsMatch(stateNext, veBase.Tail)))
+                .ToList();
 
             return ret;
         }
