@@ -1,9 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using System.Reflection;
 using System.Diagnostics;
 
 namespace StateVector
@@ -178,20 +175,30 @@ namespace StateVector
 
         protected void Init(string head, string tail, string tag, params Action[] funcArray)
         {
+            if (head == null)
+            {
+                throw new ArgumentNullException(nameof(head));
+            }
+
+            if (tail == null)
+            {
+                throw new ArgumentNullException(nameof(tail));
+            }
+
+            if (tag == null)
+            {
+                throw new ArgumentNullException(nameof(tag));
+            }
+
             foreach (var func in funcArray)
             {
-                if (IsNullArgument(head, tail, tag, func))
+                if (func == null)
                 {
-                    throw new ArgumentNullException();
+                    throw new ArgumentNullException(nameof(func));
                 }
 
                 Array.Add(new VectorEventBase(head, tail, tag, func));
             }
-        }
-
-        protected bool IsNullArgument(params object[] objArray)
-        {
-            return objArray.Contains(null);
         }
     }
 
@@ -257,18 +264,9 @@ namespace StateVector
         {
             foreach (var ins in EventList)
             {
-                Debug.Write(ListName + ":");
-                Debug.WriteLine(GetEventSetting(ins));
+                Debug.WriteLine($"{ListName} : { ins.Tag } "
+                    + $"list[{ ins.Index }].priority({ ins.Priority }) {ins.Head} -> {ins.Tail} , {ins.Func.Method.Name}");
             }
-        }
-
-        protected string GetEventSetting(VectorEventBase ins)
-        {
-            string ret = string.Empty;
-
-            ret = $"{ ins.Tag } list[{ ins.Index }].priority({ ins.Priority }) {ins.Head} -> {ins.Tail} , {ins.Func.Method.Name}";
-
-            return ret;
         }
 
         public void Refresh(string stateNext)
@@ -288,9 +286,8 @@ namespace StateVector
             {
                 if (EnableRefreshTrace)
                 {
-                    Debug.Write(ListName + " " + vbe.Tag + " ");
-                    Debug.Write(StateNow + " -> " + stateNext);
-                    Debug.Write(" do[" + vbe.Index + "].priority(" + vbe.Priority + ") " + vbe.Func.Method.Name);
+                    Debug.WriteLine($"{ListName} {vbe.Tag} {StateNow} -> {stateNext} "
+                        + $"do[{vbe.Index}].priority({vbe.Priority}) {vbe.Func.Method.Name}");
                 }
 
                 vbe.Func();
