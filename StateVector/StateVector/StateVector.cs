@@ -10,12 +10,17 @@ namespace StateVector
 
     public class VectorEventBase
     {
+        private enum NumberStatus : int
+        {
+            NOT_SET = -1
+        }
+
         public string Head { get; set; } = string.Empty;
         public string Tail { get; set; } = string.Empty;
         public string Tag { get; set; } = string.Empty;
         public Action Func { get; set; } = null;
-        public int Priority { get; set; } = -1;
-        public int Index { get; set; } = -1;
+        public int Priority { get; set; } = (int)NumberStatus.NOT_SET;
+        public int Index { get; set; } = (int)NumberStatus.NOT_SET;
 
         public VectorEventBase()
         {
@@ -75,23 +80,27 @@ namespace StateVector
         }
 
         public VectorEvent(string head, string tail, params Action[] funcArray)
+           : this(head, tail, string.Empty, funcArray)
         {
-            Init(head, tail, string.Empty, funcArray);
+
         }
 
         public VectorEvent(VectorHead head, string tail, params Action[] funcArray)
+            : this(head, tail, string.Empty, funcArray)
         {
-            Init(head.Collection, tail, string.Empty, funcArray);
+
         }
 
         public VectorEvent(string head, VectorTail tail, params Action[] funcArray)
+            : this(head, tail, string.Empty, funcArray)
         {
-            Init(head, tail.Collection, string.Empty, funcArray);
+
         }
 
         public VectorEvent(VectorHead head, VectorTail tail, params Action[] funcArray)
+            : this(head, tail, string.Empty, funcArray)
         {
-            Init(head.Collection, tail.Collection, string.Empty, funcArray);
+
         }
 
         public VectorEvent(string head, string tail, string tag, params Action[] funcArray)
@@ -175,12 +184,12 @@ namespace StateVector
 
         protected void Init(string head, string tail, string tag, params Action[] funcArray)
         {
-            if (head == null)
+            if (string.IsNullOrEmpty(head))
             {
                 throw new ArgumentNullException(nameof(head));
             }
 
-            if (tail == null)
+            if (string.IsNullOrEmpty(tail))
             {
                 throw new ArgumentNullException(nameof(tail));
             }
@@ -262,10 +271,10 @@ namespace StateVector
 
         public void GetListInfo()
         {
-            foreach (var ins in EventList)
+            foreach (var vbe in EventList)
             {
-                Debug.WriteLine($"{ListName} : { ins.Tag } "
-                    + $"list[{ ins.Index }].priority({ ins.Priority }) {ins.Head} -> {ins.Tail} , {ins.Func.Method.Name}");
+                Debug.WriteLine($"{ListName} : { vbe.Tag } "
+                    + $"list[{ vbe.Index }].priority({ vbe.Priority }) {vbe.Head} -> {vbe.Tail} , {vbe.Func.Method.Name}");
             }
         }
 
@@ -304,21 +313,17 @@ namespace StateVector
 
         protected List<VectorEventBase> GetHeadAndTali(string stateNow, string stateNext)
         {
-            List<VectorEventBase> ret = EventList
+            return EventList
                 .Where(veBase => (veBase.Head == stateNow && veBase.Tail == stateNext))
                 .ToList();
-
-            return ret;
         }
 
         protected List<VectorEventBase> GetRegexp(string stateNow, string stateNext)
         {
-            List<VectorEventBase> ret = EventList
+            return EventList
                 .Where(veBase => (
                     Regex.IsMatch(stateNow, veBase.Head) && Regex.IsMatch(stateNext, veBase.Tail)))
                 .ToList();
-
-            return ret;
         }
     }
 }
