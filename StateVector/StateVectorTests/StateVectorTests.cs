@@ -242,6 +242,106 @@ namespace StateVector.Tests
         }
 
         [TestMethod()]
+        public void Refresh_OK_ab_ac_bc_bd()
+        {
+            // 状態A or Bから状態Bへの変化条件が登録済みのため動作する
+            int lambdaCheck = 0;
+
+            Action func = () => { lambdaCheck++; };
+
+            VE[] list = {
+                new VE(
+                    VE.HeadOr( "a", "b" ),
+                    VE.TailOr("c", "d" ),
+                    VE.Func(func))
+            };
+            ins = new TW_StateVector("Refresh_OK_ab_bb", "a", list);
+            ins.EnableRefreshTrace = true;
+            ins.Refresh("c");
+            Assert.AreEqual(1, lambdaCheck);
+        }
+
+        [TestMethod()]
+        public void Collection_headCollection_tailCollection()
+        {
+            // 状態A or Bから状態Bへの変化条件が登録済みのため動作する
+            int lambdaCheck = 0;
+            bool isCatch = false;
+
+            Action func = () => { lambdaCheck++; };
+            try { 
+                VE[] list = {
+                    new VE(
+                        VE.HeadOr("a", null ),
+                        VE.TailOr("c", "d" ),
+                        VE.Func(func))
+                };
+                //ins = new TW_StateVector("Refresh_OK_ab_bb", "a", list);
+                //ins.EnableRefreshTrace = true;
+                //ins.Refresh("c");
+            }
+            catch (Exception ex)
+            {
+                isCatch = true;
+            }
+            Assert.IsTrue(isCatch);
+        }
+
+        [TestMethod()]
+        public void Collection_headCollection()
+        {
+            // 状態A or Bから状態Bへの変化条件が登録済みのため動作する
+            int lambdaCheck = 0;
+            bool isCatch = false;
+
+            Action func = () => { lambdaCheck++; };
+            try
+            {
+                VE[] list = {
+                    new VE(
+                        VE.HeadOr("a", null ),
+                        "c",
+                        VE.Func(func))
+                };
+                //ins = new TW_StateVector("Refresh_OK_ab_bb", "a", list);
+                //ins.EnableRefreshTrace = true;
+                //ins.Refresh("c");
+            }
+            catch (Exception ex)
+            {
+                isCatch = true;
+            }
+            Assert.IsTrue(isCatch);
+        }
+
+        [TestMethod()]
+        public void Collection_tailCollection()
+        {
+            // 状態A or Bから状態Bへの変化条件が登録済みのため動作する
+            int lambdaCheck = 0;
+            bool isCatch = false;
+
+            Action func = () => { lambdaCheck++; };
+            try
+            {
+                VE[] list = {
+                    new VE(
+                        "a",
+                        VE.TailOr("c", null ),
+                        VE.Func(func))
+                };
+                //ins = new TW_StateVector("Refresh_OK_ab_bb", "a", list);
+                //ins.EnableRefreshTrace = true;
+                //ins.Refresh("c");
+            }
+            catch (Exception ex)
+            {
+                isCatch = true;
+            }
+            Assert.IsTrue(isCatch);
+        }
+
+        [TestMethod()]
         public void Refresh_OK_ab_ac()
         {
             // 状態Aから状態B or Cへの変化条件が登録済みのため動作する
