@@ -269,7 +269,7 @@ namespace StateVector.Tests
             bool isCatch = false;
 
             Action func = () => { lambdaCheck++; };
-            try { 
+            try {
                 VE[] list = {
                     new VE(
                         VE.HeadOr("a", null ),
@@ -450,6 +450,64 @@ namespace StateVector.Tests
             ins.StateNow = ("c");
             ins.Refresh("b");
             Assert.AreEqual(0, lambdaCheck);
+        }
+
+        [TestMethod()]
+        public void GetListInfo()
+        {
+            VE[] list = {
+                new VE("a", "b", "tag", /* ラムダ式 */() => { })
+            };
+            ins = new TW_StateVector("a", list);
+            ins.GetListInfo();
+            ins.EnableRefreshTrace = true;
+            ins.Refresh("b");
+        }
+
+        [TestMethod()]
+        public void ArgumentNullException_Tag()
+        {
+            bool isCatch = false;
+
+            try
+            {
+                VE[] list = {
+                    new VE("a", "b", (string)null, /* ラムダ式 */() => { })
+                };
+                ins = new TW_StateVector("a", list);
+            }
+            catch(Exception ex)
+            {
+                isCatch = true;
+            }
+
+            Assert.IsTrue(isCatch);
+        }
+
+
+        [TestMethod()]
+        public void FuncArray()
+        {
+            int lambdaCheck = 0;
+
+            var vefa = VectorEvent.FuncArray(
+                () => { lambdaCheck++; },
+                () => { lambdaCheck++; }
+                );
+
+            foreach(var f in vefa)
+            {
+                f();
+            }
+
+            Assert.AreEqual(2, lambdaCheck);
+        }
+
+        [TestMethod()]
+        public void VectorEventBase()
+        {
+            VectorEventBase veb = new VEB();
+            VectorEvent ve = new VE();
         }
     }
 }
