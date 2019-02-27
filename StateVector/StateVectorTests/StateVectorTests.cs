@@ -1,4 +1,5 @@
-﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
+﻿using StateVector;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System;
 using System.Collections.Generic;
 
@@ -113,6 +114,33 @@ namespace StateVector.Tests
         }
 
         [TestMethod()]
+        public void Refresh_NG_ac()
+        {
+            int lambdaCheck = 0;
+            var result = new List<StateVectorTraceInfo>();
+            Action func = () => { lambdaCheck = 1; };
+
+            VE[] list = {
+                new VE("a", "b", () => { lambdaCheck = 1; }),
+                new VE("a", "b", func),
+                new VE("a", "b", NameCheckFunc)
+            };
+            ins = new TW_StateVector("Refresh_OK_ab", "a", list);
+            ins.EnableRefreshTrace = false;
+            ins.TraceFunc = null;
+            ins.Refresh("c", (StateVectorTraceInfo info) =>
+            {
+                result.Add(info);
+
+                return null;
+            });
+
+            Assert.AreEqual(0, lambdaCheck);
+            Assert.AreEqual("a", result[0].Head);
+            Assert.AreEqual("c", result[0].Tail);
+        }
+
+        [TestMethod()]
         public void Refresh_OK_regexp()
         {
             int lambdaCheck = 0;
@@ -143,7 +171,7 @@ namespace StateVector.Tests
                 };
                 ins = new TW_StateVector("a", list);
             }
-            catch (ArgumentNullException)
+            catch (ArgumentException)
             {
                 isCatch = true;
             }
@@ -166,7 +194,7 @@ namespace StateVector.Tests
                 };
                 ins = new TW_StateVector("a", list);
             }
-            catch (ArgumentNullException)
+            catch (ArgumentException)
             {
                 isCatch = true;
             }
@@ -189,7 +217,7 @@ namespace StateVector.Tests
                 };
                 ins = new TW_StateVector("a", list);
             }
-            catch (ArgumentNullException)
+            catch (ArgumentException)
             {
                 isCatch = true;
             }
@@ -269,7 +297,8 @@ namespace StateVector.Tests
             bool isCatch = false;
 
             Action func = () => { lambdaCheck++; };
-            try {
+            try
+            {
                 VE[] list = {
                     new VE(
                         VE.HeadOr("a", null ),
@@ -280,7 +309,7 @@ namespace StateVector.Tests
                 //ins.EnableRefreshTrace = true;
                 //ins.Refresh("c");
             }
-            catch (Exception ex)
+            catch (Exception)
             {
                 isCatch = true;
             }
@@ -307,7 +336,7 @@ namespace StateVector.Tests
                 //ins.EnableRefreshTrace = true;
                 //ins.Refresh("c");
             }
-            catch (Exception ex)
+            catch (Exception)
             {
                 isCatch = true;
             }
@@ -334,7 +363,7 @@ namespace StateVector.Tests
                 //ins.EnableRefreshTrace = true;
                 //ins.Refresh("c");
             }
-            catch (Exception ex)
+            catch (Exception)
             {
                 isCatch = true;
             }
@@ -368,12 +397,21 @@ namespace StateVector.Tests
         public void Refresh_NG_aa()
         {
             // 状態Aから状態Aへの変化条件(状態A維持)は未登録のため動作しない
+            bool isChatch = false;
             int lambdaCheck = 0;
             VE[] list = {
                 new VE("a", "b", /* ラムダ式 */() => { lambdaCheck = 1; })
             };
             ins = new TW_StateVector("a", list);
-            ins.Refresh("a");
+            try
+            {
+                ins.Refresh("a");
+            }
+            catch (Exception)
+            {
+                isChatch = true;
+            }
+            Assert.IsTrue(isChatch);
             Assert.AreEqual(0, lambdaCheck);
         }
 
@@ -381,6 +419,7 @@ namespace StateVector.Tests
         public void Refresh_NG_bb()
         {
             // 状態Bから状態Bへの変化条件(状態B維持)は未登録のため動作しない
+            bool isChatch = false;
             int lambdaCheck = 0;
             VE[] list = {
                 new VE("a", "b", /* ラムダ式 */() => { lambdaCheck = 1; })
@@ -388,7 +427,15 @@ namespace StateVector.Tests
             ins = new TW_StateVector("a", list);
 
             ins.StateNow = ("b");
-            ins.Refresh("b");
+            try
+            {
+                ins.Refresh("b");
+            }
+            catch (Exception)
+            {
+                isChatch = true;
+            }
+            Assert.IsTrue(isChatch);
             Assert.AreEqual(0, lambdaCheck);
         }
 
@@ -396,6 +443,7 @@ namespace StateVector.Tests
         public void Refresh_NG_ba()
         {
             // 状態Bから状態Aへの変化条件は未登録のため動作しない
+            bool isChatch = false;
             int lambdaCheck = 0;
             VE[] list = {
                 new VE("a", "b", /* ラムダ式 */() => { lambdaCheck = 1; })
@@ -403,7 +451,15 @@ namespace StateVector.Tests
             ins = new TW_StateVector("a", list);
 
             ins.StateNow = ("b");
-            ins.Refresh("a");
+            try
+            {
+                ins.Refresh("a");
+            }
+            catch (Exception)
+            {
+                isChatch = true;
+            }
+            Assert.IsTrue(isChatch);
             Assert.AreEqual(0, lambdaCheck);
         }
 
@@ -411,6 +467,7 @@ namespace StateVector.Tests
         public void Refresh_NG_bc()
         {
             //条件を追加していない状態Cでは動作しない
+            bool isChatch = false;
             int lambdaCheck = 0;
             VE[] list = {
                 new VE("a", "b", /* ラムダ式 */() => { lambdaCheck = 1; })
@@ -418,7 +475,15 @@ namespace StateVector.Tests
             ins = new TW_StateVector("a", list);
 
             ins.StateNow = ("b");
-            ins.Refresh("c");
+            try
+            {
+                ins.Refresh("c");
+            }
+            catch (Exception)
+            {
+                isChatch = true;
+            }
+            Assert.IsTrue(isChatch);
             Assert.AreEqual(0, lambdaCheck);
         }
 
@@ -426,6 +491,7 @@ namespace StateVector.Tests
         public void Refresh_NG_cb()
         {
             //条件を追加していない状態Cでは動作しない
+            bool isChatch = false;
             int lambdaCheck = 0;
             VE[] list = {
                 new VE("a", "b", /* ラムダ式 */() => { lambdaCheck = 1; })
@@ -433,7 +499,15 @@ namespace StateVector.Tests
             ins = new TW_StateVector("a", list);
 
             ins.StateNow = ("c");
-            ins.Refresh("b");
+            try
+            {
+                ins.Refresh("b");
+            }
+            catch (Exception)
+            {
+                isChatch = true;
+            }
+            Assert.IsTrue(isChatch);
             Assert.AreEqual(0, lambdaCheck);
         }
 
@@ -441,6 +515,7 @@ namespace StateVector.Tests
         public void Refresh_NG_cc()
         {
             //条件を追加していない状態Cでは動作しない
+            bool isChatch = false;
             int lambdaCheck = 0;
             VE[] list = {
                 new VE("a", "b", /* ラムダ式 */() => { lambdaCheck = 1; })
@@ -448,20 +523,44 @@ namespace StateVector.Tests
             ins = new TW_StateVector("a", list);
 
             ins.StateNow = ("c");
-            ins.Refresh("b");
+            try
+            {
+                ins.Refresh("b");
+            }
+            catch (Exception)
+            {
+                isChatch = true;
+            }
+            Assert.IsTrue(isChatch);
             Assert.AreEqual(0, lambdaCheck);
         }
 
         [TestMethod()]
-        public void GetListInfo()
+        public void GetEventList()
         {
+            List<StateVectorTraceInfo> result = new List<StateVectorTraceInfo>();
             VE[] list = {
-                new VE("a", "b", "tag", /* ラムダ式 */() => { })
+                new VE("a", "b", "tag", /* ラムダ式 */() => { }),
+                new VE("b", "a", "tag", /* ラムダ式 */() => { })
             };
             ins = new TW_StateVector("a", list);
-            ins.GetListInfo();
+            ins.GetEventList();
             ins.EnableRefreshTrace = true;
             ins.Refresh("b");
+            ins.EnableRefreshTrace = false;
+            ins.Refresh("a");
+
+            ins.GetEventList((StateVectorTraceInfo info) =>
+            {
+                result.Add(info);
+                return null;
+            });
+
+            Assert.AreEqual("a", result[0].Head);
+            Assert.AreEqual("b", result[0].Tail);
+
+            Assert.AreEqual("b", result[1].Head);
+            Assert.AreEqual("a", result[1].Tail);
         }
 
         [TestMethod()]
@@ -476,7 +575,7 @@ namespace StateVector.Tests
                 };
                 ins = new TW_StateVector("a", list);
             }
-            catch(Exception ex)
+            catch (Exception)
             {
                 isCatch = true;
             }
@@ -495,7 +594,7 @@ namespace StateVector.Tests
                 () => { lambdaCheck++; }
                 );
 
-            foreach(var f in vefa)
+            foreach (var f in vefa)
             {
                 f();
             }
@@ -506,8 +605,29 @@ namespace StateVector.Tests
         [TestMethod()]
         public void VectorEventBase()
         {
-            VectorEventBase veb = new VEB();
-            VectorEvent ve = new VE();
+            VEB veb1 = new VEB();
+            VEB veb2 = new VEB("a", "b", () => { });
+            VE ve1 = new VE();
+            VE ve2 = new VE(VE.HeadOr("a", "b"), "c", "tag", () => { });
+            VE ve3 = new VE("a", VE.TailOr("b", "c"), "tag", () => { });
+        }
+
+        [TestMethod()]
+        public void StateVectorTest()
+        {
+            int lambdaCheck = 0;
+            VE[] list = {
+                new VE("a", "b", /* ラムダ式 */() => { })
+            };
+
+            Func<StateVectorTraceInfo, Exception> func = (StateVectorTraceInfo info) =>
+            {
+                lambdaCheck++;
+
+                return null;
+            };
+            StateVector obj = new StateVector("a", func, list);
+            Assert.IsTrue(ReferenceEquals(func, obj.TraceFunc));
         }
     }
 }
