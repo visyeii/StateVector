@@ -402,7 +402,9 @@ namespace StateVector.Tests
             VE[] list = {
                 new VE("a", "b", /* ラムダ式 */() => { lambdaCheck = 1; })
             };
+
             ins = new TW_StateVector("a", list);
+
             try
             {
                 ins.Refresh("a");
@@ -421,9 +423,11 @@ namespace StateVector.Tests
             // 状態Bから状態Bへの変化条件(状態B維持)は未登録のため動作しない
             bool isChatch = false;
             int lambdaCheck = 0;
+
             VE[] list = {
                 new VE("a", "b", /* ラムダ式 */() => { lambdaCheck = 1; })
             };
+
             ins = new TW_StateVector("a", list);
 
             ins.StateNow = ("b");
