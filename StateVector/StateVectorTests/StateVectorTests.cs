@@ -553,7 +553,7 @@ namespace StateVector.Tests
             ins.GetEventList((StateVectorTraceInfo info) =>
             {
                 result.Add(info);
-                return null;
+                return StateVector.NO_EXCEPTION;
             });
 
             Assert.AreEqual("a", result[0].Head);
@@ -624,7 +624,7 @@ namespace StateVector.Tests
             {
                 lambdaCheck++;
 
-                return null;
+                return StateVector.NO_EXCEPTION;
             };
             StateVector obj = new StateVector("a", func, list);
             Assert.IsTrue(ReferenceEquals(func, obj.TraceFunc));

@@ -1,4 +1,4 @@
-@startuml
+@startuml name
 [*] --> Form : Form Load
 
 state Form {
@@ -13,7 +13,7 @@ state Form {
     b --> c : a|b->c
     c --> a : c->a|b
     c --> b : c->a|b
+    c -[#006600]-> c : c->c throw Exeption 
 }
-
 Form --> [*] : Form Close
 @enduml

@@ -16,10 +16,12 @@ namespace StateVector
             NOT_SET = -1
         }
 
+        public static readonly Action FUNC_NOT_SET = null;
+
         public string Head { get; set; } = string.Empty;
         public string Tail { get; set; } = string.Empty;
         public string Tag { get; set; } = string.Empty;
-        public Action Func { get; set; } = null;
+        public Action Func { get; set; } = FUNC_NOT_SET;
         public int Priority { get; set; } = (int)NumberStatus.NOT_SET;
         public int Index { get; set; } = (int)NumberStatus.NOT_SET;
 
@@ -200,7 +202,7 @@ namespace StateVector
 
             foreach (var func in funcArray)
             {
-                if (func == null)
+                if (func == VectorEventBase.FUNC_NOT_SET)
                 {
                     throw new ArgumentNullException(nameof(func));
                 }
@@ -225,6 +227,8 @@ namespace StateVector
 
     public class StateVector
     {
+        public static readonly Exception NO_EXCEPTION = null;
+        public static readonly Func<StateVectorTraceInfo, Exception> FUNC_NOT_SET = null;
         public bool EnableRefreshTrace { get; set; } = false;
         public bool EnableRegexp { get; set; } = false;
         protected List<VectorEventBase> EventList { get; set; } = new List<VectorEventBase>();
@@ -265,13 +269,13 @@ namespace StateVector
         }
 
         public StateVector(string startState, params VectorEvent[] eventArray)
-            : this(string.Empty, startState, null, eventArray)
+            : this(string.Empty, startState, FUNC_NOT_SET, eventArray)
         {
 
         }
 
         public StateVector(string listName, string startState, params VectorEvent[] eventArray)
-            : this(listName, startState, null, eventArray)
+            : this(listName, startState, FUNC_NOT_SET, eventArray)
         {
 
         }
@@ -291,7 +295,7 @@ namespace StateVector
             Func<StateVectorTraceInfo, Exception> traceFunc,
             params VectorEvent[] eventArray)
         {
-            if (traceFunc != null)
+            if (traceFunc != FUNC_NOT_SET)
             {
                 TraceFunc = traceFunc;
             }
@@ -329,7 +333,7 @@ namespace StateVector
 
                 traceInfo.IsHit = true;
 
-                if (onceTraceFunc != null)
+                if (onceTraceFunc != FUNC_NOT_SET)
                 {
                     Trace(onceTraceFunc, traceInfo);
                 }
@@ -407,7 +411,7 @@ namespace StateVector
         {
             var ex = traceFunc?.Invoke(info);
 
-            if (ex != null)
+            if (ex != NO_EXCEPTION)
             {
                 throw ex;
             }
