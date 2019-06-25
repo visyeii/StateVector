@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Windows.Forms;
 
 namespace StateVector
@@ -23,50 +24,43 @@ namespace StateVector
 
         private void Form1_Load(object sender, EventArgs e)
         {
-            VE[] list = {
-                new VE("init",              VE.TailOr("a", "b", "c"),   InitState, () => { SetLog("!"); }),
-                new VE("a",                 "b",                        () => { SetLog("a->b"); }),
-                new VE("b",                 "a",                        () => { SetLog("b->a"); }),
-                new VE("a",                 "a",                        () => { SetLog("a->a"); }),
-                new VE("b",                 "b",                        () => { SetLog("b->b"); }),
-                new VE(VE.HeadOr("a", "b"), "c",                        () => { SetLog("a|b->c"); }),
-                new VE("c",                 VE.TailOr("a", "b"),        () => { SetLog("c->a|b"); })
-            };
+            m_stateVector = new StateVector("init", new List<VE>{
+                {"init",              VE.TailOr("a", "b", "c"),   InitState, () => { SetLog("!"); } },
+                {"a",                 "b",                        () => { SetLog("a->b"); } },
+                {"b",                 "a",                        () => { SetLog("b->a"); } },
+                {"a",                 "a",                        () => { SetLog("a->a"); } },
+                {"b",                 "b",                        () => { SetLog("b->b"); } },
+                {VE.HeadOr("a", "b"), "c",                        () => { SetLog("a|b->c"); } },
+                {"c",                 VE.TailOr("a", "b"),        () => { SetLog("c->a|b"); } }
+            });
 
-            m_stateVector = new StateVector("init", list);
-            m_stateVector.EnableRefreshTrace = true;
             m_TraceFunc_DefaultBackup = m_stateVector.TraceFunc;
         }
 
-        private void button1_Click(object sender, EventArgs e)
+        private void button_Click(object sender, EventArgs e)
         {
-            try
-            {
-                m_stateVector.Refresh("a");
-            }
-            catch (NotImplementedException ex)
-            {
-                SetLog("NotImplementedException:" + ex.Message);
-            }
-        }
+            string clickButtonText = string.Empty;
 
-        private void button2_Click(object sender, EventArgs e)
-        {
-            try
+            if (ReferenceEquals(sender, button1))
             {
-                m_stateVector.Refresh("b");
+                clickButtonText = "a";
             }
-            catch (NotImplementedException ex)
+            else if (ReferenceEquals(sender, button2))
             {
-                SetLog("NotImplementedException:" + ex.Message);
+                clickButtonText = "b";
             }
-        }
+            else if (ReferenceEquals(sender, button3))
+            {
+                clickButtonText = "c";
+            }
+            else
+            {
+                // do nothing
+            }
 
-        private void button3_Click(object sender, EventArgs e)
-        {
             try
             {
-                m_stateVector.Refresh("c");
+                m_stateVector.Refresh(clickButtonText);
             }
             catch (NotImplementedException ex)
             {

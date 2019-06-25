@@ -212,6 +212,21 @@ namespace StateVector
         }
     }
 
+    public static class VectorEventExtension
+    {
+        public static void Add(this List<VectorEvent> list, string head, string tail, params Action[] funcArray)
+            => list.Add(new VectorEvent(head, tail, funcArray));
+
+        public static void Add(this List<VectorEvent> list, VectorHead head, string tail, params Action[] funcArray)
+            => list.Add(new VectorEvent(head, tail, funcArray));
+
+        public static void Add(this List<VectorEvent> list, string head, VectorTail tail, params Action[] funcArray)
+            => list.Add(new VectorEvent(head, tail, funcArray));
+
+        public static void Add(this List<VectorEvent> list, VectorHead head, VectorTail tail, params Action[] funcArray)
+            => list.Add(new VectorEvent(head, tail, funcArray));
+    }
+
     public class StateVectorTraceInfo : VectorEventBase
     {
         public bool IsHit { get; set; } = false;
@@ -274,8 +289,20 @@ namespace StateVector
 
         }
 
+        public StateVector(string startState, List<VectorEvent> eventList)
+            : this(string.Empty, startState, FUNC_NOT_SET, eventList.ToArray())
+        {
+
+        }
+
         public StateVector(string listName, string startState, params VectorEvent[] eventArray)
             : this(listName, startState, FUNC_NOT_SET, eventArray)
+        {
+
+        }
+
+        public StateVector(string listName, string startState, List<VectorEvent> eventList)
+            : this(listName, startState, FUNC_NOT_SET, eventList.ToArray())
         {
 
         }
@@ -285,6 +312,15 @@ namespace StateVector
             Func<StateVectorTraceInfo, Exception> traceFunc,
             params VectorEvent[] eventArray)
             : this(string.Empty, startState, traceFunc, eventArray)
+        {
+
+        }
+
+        public StateVector(
+            string startState,
+            Func<StateVectorTraceInfo, Exception> traceFunc,
+            List<VectorEvent> eventList)
+            : this(string.Empty, startState, FUNC_NOT_SET, eventList.ToArray())
         {
 
         }
@@ -302,6 +338,16 @@ namespace StateVector
 
             ListName = listName;
             Init(startState, eventArray);
+        }
+
+        public StateVector(
+            string listName,
+            string startState,
+            Func<StateVectorTraceInfo, Exception> traceFunc,
+            List<VectorEvent> eventList)
+            : this(listName, startState, traceFunc, eventList.ToArray())
+        {
+
         }
 
         protected void Init(string startState, VectorEvent[] eventArray)
