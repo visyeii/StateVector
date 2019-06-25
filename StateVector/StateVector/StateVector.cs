@@ -229,7 +229,7 @@ namespace StateVector
     {
         public static readonly Exception NO_EXCEPTION = null;
         public static readonly Func<StateVectorTraceInfo, Exception> FUNC_NOT_SET = null;
-        public bool EnableRefreshTrace { get; set; } = false;
+        public bool EnableRefreshTrace { get; set; } = true;
         public bool EnableRegexp { get; set; } = false;
         protected List<VectorEventBase> EventList { get; set; } = new List<VectorEventBase>();
         public Func<StateVectorTraceInfo, Exception> TraceFunc { get; set; } = new Func<StateVectorTraceInfo, Exception>(
