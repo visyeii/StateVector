@@ -244,11 +244,11 @@ namespace StateVector
                 {
                     if (traceInfo.IsDone)
                     {
-                        Debug.WriteLine(msg);
+                        Debug.WriteLine(" done.");
                     }
                     else
                     {
-                        Debug.WriteLine(" done.");
+                        Debug.WriteLine(msg);
                     }
                 }
                 else
@@ -327,9 +327,9 @@ namespace StateVector
 
         public void GetEventList(Func<StateVectorTraceInfo, Exception> onceTraceFunc = null)
         {
-            foreach (var vbe in EventList)
+            foreach (var veb in EventList)
             {
-                var traceInfo = SetTraceInfo(vbe.Head, vbe.Tail, vbe);
+                var traceInfo = SetTraceInfo(veb.Head, veb.Tail, veb);
 
                 traceInfo.IsHit = true;
 
@@ -348,9 +348,9 @@ namespace StateVector
         {
             List<VectorEventBase> list = GetNextEventList(stateNext);
 
-            foreach (var vbe in list)
+            foreach (var veb in list)
             {
-                var traceInfo = SetTraceInfo(StateNow, stateNext, vbe);
+                var traceInfo = SetTraceInfo(StateNow, stateNext, veb);
 
                 traceInfo.IsHit = true;
 
@@ -361,7 +361,7 @@ namespace StateVector
 
                 Trace(onceTraceFunc, traceInfo);//start
 
-                vbe.Func();
+                veb.Func();
 
                 traceInfo.IsDone = true;
 
@@ -377,7 +377,11 @@ namespace StateVector
             {
                 var traceInfo = SetTraceInfo(StateNow, stateNext);
 
-                Trace(TraceFunc, traceInfo);
+                if (EnableRefreshTrace)
+                {
+                    Trace(TraceFunc, traceInfo);//end
+                }
+
                 Trace(onceTraceFunc, traceInfo);
             }
 
@@ -385,7 +389,7 @@ namespace StateVector
             StateNow = stateNext;
         }
 
-        protected StateVectorTraceInfo SetTraceInfo(string stateNow, string stateNext, VectorEventBase vbe = null)
+        protected StateVectorTraceInfo SetTraceInfo(string stateNow, string stateNext, VectorEventBase veb = null)
         {
             StateVectorTraceInfo traceInfo = new StateVectorTraceInfo();
 
@@ -394,12 +398,12 @@ namespace StateVector
             traceInfo.Head = stateNow;
             traceInfo.Tail = stateNext;
 
-            if (vbe != null)
+            if (veb != null)
             {
-                traceInfo.Tag = vbe.Tag;
-                traceInfo.Index = vbe.Index;
-                traceInfo.Priority = vbe.Priority;
-                traceInfo.FuncInfo = vbe.Func.Method;
+                traceInfo.Tag = veb.Tag;
+                traceInfo.Index = veb.Index;
+                traceInfo.Priority = veb.Priority;
+                traceInfo.FuncInfo = veb.Func.Method;
             }
 
             traceInfo.IsDone = false;
@@ -436,15 +440,15 @@ namespace StateVector
         protected List<VectorEventBase> GetHeadAndTali(string stateNow, string stateNext)
         {
             return EventList
-                .Where(veBase => (veBase.Head == stateNow && veBase.Tail == stateNext))
+                .Where(veb => (veb.Head == stateNow && veb.Tail == stateNext))
                 .ToList();
         }
 
         protected List<VectorEventBase> GetRegexp(string stateNow, string stateNext)
         {
             return EventList
-                .Where(veBase => (
-                    Regex.IsMatch(stateNow, veBase.Head) && Regex.IsMatch(stateNext, veBase.Tail)))
+                .Where(veb => (
+                    Regex.IsMatch(stateNow, veb.Head) && Regex.IsMatch(stateNext, veb.Tail)))
                 .ToList();
         }
     }
