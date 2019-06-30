@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Windows.Forms;
 
 namespace StateVector
@@ -40,8 +41,8 @@ namespace StateVector
         private void button_Click(object sender, EventArgs e)
         {
             string clickButtonText = string.Empty;
-
-            if (ReferenceEquals(sender, button1))
+            
+            if (sender.IsSameInstance(button1))
             {
                 clickButtonText = "a";
             }
@@ -60,7 +61,15 @@ namespace StateVector
 
             try
             {
-                m_stateVector.Refresh(clickButtonText);
+                var result = m_stateVector.Refresh(clickButtonText);
+
+                foreach(var vti in result)
+                {
+                    string msg = $"Run:{vti.IsDone:5} {vti.ListName} {vti.Tag} {vti.Head} -> {vti.Tail} "
+                                       + $"do[{vti.Index}].priority({vti.Priority}) "
+                                       + $"{(vti.FuncInfo == null ? "" : vti.FuncInfo.Name)}";
+                    Debug.WriteLine(msg);
+                }
             }
             catch (NotImplementedException ex)
             {

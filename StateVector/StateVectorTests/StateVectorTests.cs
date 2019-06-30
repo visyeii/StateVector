@@ -22,8 +22,21 @@ namespace StateVector.Tests
         {
 
         }
+
+        public TestWrapper_StateVector(string startState, List<VE> evenList)
+            : base(startState, evenList)
+        {
+
+        }
+
         public TestWrapper_StateVector(string listName, string startState, VE[] eventArray)
             : base(listName, startState, eventArray)
+        {
+
+        }
+
+        public TestWrapper_StateVector(string listName, string startState, List<VE> evenList)
+            : base(listName, startState, evenList)
         {
 
         }
@@ -568,6 +581,62 @@ namespace StateVector.Tests
         }
 
         [TestMethod()]
+        public void GetEventList_GenericList()
+        {
+            List<StateVectorTraceInfo> result = new List<StateVectorTraceInfo>();
+            List<VectorEvent> list = new List<VectorEvent>{
+                { "a", "b", "tag", () => { } },
+                { "b", "a", "tag", () => { } }
+            };
+            ins = new TW_StateVector("a", list);
+            ins.GetEventList();
+            ins.EnableRefreshTrace = true;
+            ins.Refresh("b");
+            ins.EnableRefreshTrace = false;
+            ins.Refresh("a");
+
+            ins.GetEventList((StateVectorTraceInfo info) =>
+            {
+                result.Add(info);
+                return StateVector.NO_EXCEPTION;
+            });
+
+            Assert.AreEqual("a", result[0].Head);
+            Assert.AreEqual("b", result[0].Tail);
+
+            Assert.AreEqual("b", result[1].Head);
+            Assert.AreEqual("a", result[1].Tail);
+        }
+
+        [TestMethod()]
+        public void GetEventList_GenericList_WidthListName()
+        {
+            List<StateVectorTraceInfo> result = new List<StateVectorTraceInfo>();
+
+            ins = new TW_StateVector("ListName", "a", new List<VectorEvent>{
+                { "a", "b", "tag", () => { } },
+                { "b", "a", "tag", () => { } }
+            });
+            ins.GetEventList();
+            ins.EnableRefreshTrace = true;
+            ins.Refresh("b");
+            ins.EnableRefreshTrace = false;
+            ins.Refresh("a");
+
+            ins.GetEventList((StateVectorTraceInfo info) =>
+            {
+                result.Add(info);
+                return StateVector.NO_EXCEPTION;
+            });
+
+            Assert.AreEqual("a", result[0].Head);
+            Assert.AreEqual("b", result[0].Tail);
+
+            Assert.AreEqual("b", result[1].Head);
+            Assert.AreEqual("a", result[1].Tail);
+        }
+
+        [TestMethod()]
         public void ArgumentNullException_Tag()
         {
             bool isCatch = false;
@@ -631,6 +700,76 @@ namespace StateVector.Tests
                 return StateVector.NO_EXCEPTION;
             };
             StateVector obj = new StateVector("a", func, list);
+            Assert.IsTrue(ReferenceEquals(func, obj.TraceFunc));
+        }
+
+        [TestMethod()]
+        public void StateVectorTest_List()
+        {
+            int lambdaCheck = 0;
+            var list = new List<VE> { { "a", "b", () => { } } };
+            Func<StateVectorTraceInfo, Exception> func = (StateVectorTraceInfo info) =>
+            {
+                lambdaCheck++;
+
+                return StateVector.NO_EXCEPTION;
+            };
+            StateVector obj = new StateVector("a", func, list);
+            Assert.IsTrue(ReferenceEquals(func, obj.TraceFunc));
+        }
+
+        [TestMethod()]
+        public void StateVectorTest_List_WidthListname()
+        {
+            int lambdaCheck = 0;
+            var list = new List<VE> { { "a", "b", () => { } } };
+            Func<StateVectorTraceInfo, Exception> func = (StateVectorTraceInfo info) =>
+            {
+                lambdaCheck++;
+
+                return StateVector.NO_EXCEPTION;
+            };
+            StateVector obj = new StateVector("ListName", "a", func, list);
+            Assert.IsTrue(ReferenceEquals(func, obj.TraceFunc));
+        }
+
+        [TestMethod()]
+        public void StateVectorTest_Extension()
+        {
+            int lambdaCheck = 0;
+            var list = new List<VE> {
+                { "a", "b", () => { } },
+                { VE.HeadOr("a1", "a2"), "b", () => { } },
+                { "a", VE.TailOr("b1", "b2"), () => { } },
+                { VE.HeadOr("a1", "a2"), VE.TailOr("b1", "b2"), () => { } },
+                { "a", "b", "tag", () => { } },
+                { VE.HeadOr("a1", "a2"), "b", "tag", () => { } },
+                { "a", VE.TailOr("b1", "b2"), "tag", () => { } },
+                { VE.HeadOr("a1", "a2"), VE.TailOr("b1", "b2"), "tag", () => { } },
+            };
+            Func<StateVectorTraceInfo, Exception> func = (StateVectorTraceInfo info) =>
+            {
+                lambdaCheck++;
+
+                return StateVector.NO_EXCEPTION;
+            };
+            StateVector obj = new StateVector("ListName", "a", func, list);
+            Assert.IsTrue(ReferenceEquals(func, obj.TraceFunc));
+        }
+
+        [TestMethod()]
+        public void StateVectorTest_EmptyList()
+        {
+            int lambdaCheck = 0;
+            var list = new List<VE>();
+            Func<StateVectorTraceInfo, Exception> func = (StateVectorTraceInfo info) =>
+            {
+                lambdaCheck++;
+
+                return StateVector.NO_EXCEPTION;
+            };
+            StateVector obj = new StateVector("ListName", "a", func, list);
+            obj.Refresh("a");
             Assert.IsTrue(ReferenceEquals(func, obj.TraceFunc));
         }
     }

@@ -16,7 +16,7 @@ namespace StateVector
             NOT_SET = -1
         }
 
-        public static readonly Action FUNC_NOT_SET = null;
+        public const Action FUNC_NOT_SET = null;
 
         public string Head { get; set; } = string.Empty;
         public string Tail { get; set; } = string.Empty;
@@ -225,6 +225,18 @@ namespace StateVector
 
         public static void Add(this List<VectorEvent> list, VectorHead head, VectorTail tail, params Action[] funcArray)
             => list.Add(new VectorEvent(head, tail, funcArray));
+
+        public static void Add(this List<VectorEvent> list, string head, string tail, string tag, params Action[] funcArray)
+            => list.Add(new VectorEvent(head, tail, tag, funcArray));
+
+        public static void Add(this List<VectorEvent> list, VectorHead head, string tail, string tag, params Action[] funcArray)
+            => list.Add(new VectorEvent(head, tail, tag, funcArray));
+
+        public static void Add(this List<VectorEvent> list, string head, VectorTail tail, string tag, params Action[] funcArray)
+            => list.Add(new VectorEvent(head, tail, tag, funcArray));
+
+        public static void Add(this List<VectorEvent> list, VectorHead head, VectorTail tail, string tag, params Action[] funcArray)
+            => list.Add(new VectorEvent(head, tail, tag, funcArray));
     }
 
     public class StateVectorTraceInfo : VectorEventBase
@@ -242,8 +254,8 @@ namespace StateVector
 
     public class StateVector
     {
-        public static readonly Exception NO_EXCEPTION = null;
-        public static readonly Func<StateVectorTraceInfo, Exception> FUNC_NOT_SET = null;
+        public const Exception NO_EXCEPTION = null;
+        public const Func<StateVectorTraceInfo, Exception> FUNC_NOT_SET = null;
         public bool EnableRefreshTrace { get; set; } = true;
         public bool EnableRegexp { get; set; } = false;
         protected List<VectorEventBase> EventList { get; set; } = new List<VectorEventBase>();
@@ -320,7 +332,7 @@ namespace StateVector
             string startState,
             Func<StateVectorTraceInfo, Exception> traceFunc,
             List<VectorEvent> eventList)
-            : this(string.Empty, startState, FUNC_NOT_SET, eventList.ToArray())
+            : this(string.Empty, startState, traceFunc, eventList.ToArray())
         {
 
         }
@@ -371,7 +383,7 @@ namespace StateVector
             }
         }
 
-        public void GetEventList(Func<StateVectorTraceInfo, Exception> onceTraceFunc = null)
+        public void GetEventList(Func<StateVectorTraceInfo, Exception> onceTraceFunc = FUNC_NOT_SET)
         {
             foreach (var veb in EventList)
             {
@@ -390,13 +402,15 @@ namespace StateVector
             }
         }
 
-        public void Refresh(string stateNext, Func<StateVectorTraceInfo, Exception> onceTraceFunc = null)
+        public List<StateVectorTraceInfo> Refresh(string stateNext, Func<StateVectorTraceInfo, Exception> onceTraceFunc = FUNC_NOT_SET)
         {
             List<VectorEventBase> list = GetNextEventList(stateNext);
+            List<StateVectorTraceInfo> result = new List<StateVectorTraceInfo>();
 
             foreach (var veb in list)
             {
                 var traceInfo = SetTraceInfo(StateNow, stateNext, veb);
+                result.Add(traceInfo);
 
                 traceInfo.IsHit = true;
 
@@ -422,6 +436,7 @@ namespace StateVector
             if (list.Count == 0)
             {
                 var traceInfo = SetTraceInfo(StateNow, stateNext);
+                result.Add(traceInfo);
 
                 if (EnableRefreshTrace)
                 {
@@ -433,16 +448,19 @@ namespace StateVector
 
             StateOld = StateNow;
             StateNow = stateNext;
+
+            return result;
         }
 
         protected StateVectorTraceInfo SetTraceInfo(string stateNow, string stateNext, VectorEventBase veb = null)
         {
-            StateVectorTraceInfo traceInfo = new StateVectorTraceInfo();
-
-            traceInfo.IsHit = false;
-            traceInfo.ListName = ListName;
-            traceInfo.Head = stateNow;
-            traceInfo.Tail = stateNext;
+            StateVectorTraceInfo traceInfo = new StateVectorTraceInfo
+            {
+                IsHit = false,
+                ListName = ListName,
+                Head = stateNow,
+                Tail = stateNext
+            };
 
             if (veb != null)
             {
@@ -494,7 +512,7 @@ namespace StateVector
         {
             return EventList
                 .Where(veb => (
-                    Regex.IsMatch(stateNow, veb.Head) && Regex.IsMatch(stateNext, veb.Tail)))
+                    veb.Head.IsMatch(stateNow) && veb.Tail.IsMatch(stateNext)))
                 .ToList();
         }
     }
